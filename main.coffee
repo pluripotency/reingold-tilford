@@ -177,47 +177,86 @@ TreeNode::eachBefore = (callback) ->
   @
 
 
-```
-  function apportion(v, w, ancestor) {
-    var separation = defaultSeparation
-    if (w) {
-      var vip = v,
-          vop = v,
-          vim = w,
-          vom = vip.parent.children[0],
-          sip = vip.m,
-          sop = vop.m,
-          sim = vim.m,
-          som = vom.m,
-          shift;
-      while (vim = nextRight(vim), vip = nextLeft(vip), vim && vip) {
-        vom = nextLeft(vom);
-        vop = nextRight(vop);
-        vop.a = v;
-        shift = vim.z + sim - vip.z - sip + separation(vim._, vip._);
-        if (shift > 0) {
-          moveSubtree(nextAncestor(vim, v, ancestor), v, shift);
-          sip += shift;
-          sop += shift;
-        }
-        sim += vim.m;
-        sip += vip.m;
-        som += vom.m;
-        sop += vop.m;
-      }
-      if (vim && !nextRight(vop)) {
-        vop.t = vim;
-        vop.m += sim - sop;
-      }
-      if (vip && !nextLeft(vom)) {
-        vom.t = vip;
-        vom.m += sip - som;
-        ancestor = v;
-      }
-    }
-    return ancestor;
-  }
-```
+apportion = (v, w, ancestor)->
+  separation = defaultSeparation
+  if w
+    vip = v
+    vop = v
+    vim = w
+    vom = vip.parent.children[0]
+    sip = vip.m
+    sop = vop.m
+    sim = vim.m
+    som = vom.m
+    shift = null
+    func = ()->
+      vom = nextLeft(vom)
+      vop = nextRight(vop)
+      vop.a = v
+      shift = vim.z + sim - vip.z - sip + separation(vim._, vip._)
+      if shift > 0
+        moveSubtree(nextAncestor(vim, v, ancestor), v, shift)
+        sip += shift
+        sop += shift
+      sim += vim.m
+      sip += vip.m
+      som += vom.m
+      sop += vop.m
+      return
+    func() while (vim = nextRight(vim); vip = nextLeft(vip); vim and vip)
+
+    if (vim and !nextRight(vop)) 
+      vop.t = vim
+      vop.m += sim - sop
+
+    if (vip and !nextLeft(vom)) 
+      vom.t = vip
+      vom.m += sip - som
+      ancestor = v
+  ancestor
+
+
+#```
+#function apportion(v, w, ancestor) {
+#  var separation = defaultSeparation
+#  if (w) {
+#    var vip = v,
+#        vop = v,
+#        vim = w,
+#        vom = vip.parent.children[0],
+#        sip = vip.m,
+#        sop = vop.m,
+#        sim = vim.m,
+#        som = vom.m,
+#        shift;
+#    while (vim = nextRight(vim), vip = nextLeft(vip), vim && vip) {
+#      vom = nextLeft(vom);
+#      vop = nextRight(vop);
+#      vop.a = v;
+#      shift = vim.z + sim - vip.z - sip + separation(vim._, vip._);
+#      if (shift > 0) {
+#        moveSubtree(nextAncestor(vim, v, ancestor), v, shift);
+#        sip += shift;
+#        sop += shift;
+#      }
+#      sim += vim.m;
+#      sip += vip.m;
+#      som += vom.m;
+#      sop += vop.m;
+#    }
+#    if (vim && !nextRight(vop)) {
+#      vop.t = vim;
+#      vop.m += sim - sop;
+#    }
+#    if (vip && !nextLeft(vom)) {
+#      vom.t = vip;
+#      vom.m += sip - som;
+#      ancestor = v;
+#    }
+#  }
+#  return ancestor;
+#}
+#```
 
 # Node-link tree diagram using the Reingold-Tilford "tidy" algorithm
 
@@ -487,7 +526,6 @@ create_layer_node = (node, node_list, name, offset_y)->
       create_layer_node child, node_list, len+i, offset_y
 
 vm =
-  frame: m.prop()
   create: ()->
     canvas = getCurrentCanvas()
     w = canvas.w
@@ -498,13 +536,12 @@ vm =
       text_svg 10, 20, 'Reingold Tilford Tree Layout', 'font-size: 1.2em;', null
     ]
     create_layer_node(created, node_list, 1, off_y)
-    vm.frame(frame node_list, w, h)
+    frame node_list, w, h
 
 TreeLayout =
   controller: (args)->
-    vm.create()
     vm
   view: (ctrl, args)->
-    m 'div', ctrl.frame()
+    m 'div', ctrl.create()
 
 m.mount document.getElementById('contents'), m.component TreeLayout
