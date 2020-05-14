@@ -1,4 +1,3 @@
-root = hierarchy(tree_data)
 
 getCurrentCanvas = ->
   w: window.innerWidth
@@ -40,10 +39,11 @@ vm =
     w = canvas.w
     h = canvas.h
     off_y = canvas.offset_y
-    created = tree_layout(w, h-off_y*2)(root)
+    calculated_tree = new TreeLayout(tree_data)
+    fit_size = calculated_tree.size(w, h-off_y*2)
     node_list = []
     diag_list = []
-    create_layer_node(created, node_list, diag_list, off_y)
+    create_layer_node(fit_size, node_list, diag_list, off_y)
     compute_list = [
       text_svg 10, 20, 'Reingold Tilford Tree Layout', 'font-size: 1.2em;', null
       node_list...
@@ -51,10 +51,7 @@ vm =
     ]
     frame compute_list, w, h
 
-TreeLayout =
-  controller: (args)->
-    vm
-  view: (ctrl, args)->
-    m 'div', ctrl.create()
+view =
+  view: (ctrl, args)-> vm.create()
 
-m.mount document.getElementById('contents'), m.component TreeLayout
+m.mount document.getElementById('contents'), m.component view

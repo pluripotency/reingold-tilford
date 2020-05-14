@@ -3,22 +3,6 @@ class Node
     @depth = 0
     @parent = null
 
-  eachAfter: (callback)=>
-    nodes = [ @ ]
-    next = []
-    while node = nodes.pop()
-      next.push(node)
-      children = node.children
-      if children
-        i = 0
-        n = children.length
-        while i < n
-          nodes.push children[i]
-          ++i
-    while node = next.pop()
-      callback node
-    @
-
   eachBefore: (callback)=>
     nodes = [ @ ]
     while node = nodes.pop()
@@ -30,7 +14,7 @@ class Node
           --i
     @
 
-hierarchy = (data, children) ->
+hierarchy = (data) ->
   root = new Node(data)
   nodes = [ root ]
   while node = nodes.pop()
@@ -123,8 +107,7 @@ TreeNode::eachAfter = (callback) ->
   next = []
   while node = nodes.pop()
     next.push(node)
-    children = node.children
-    if children
+    if children = node.children
       i = 0
       n = children.length
       while i < n
@@ -138,8 +121,7 @@ TreeNode::eachBefore = (callback) ->
   nodes = [@]
   while node = nodes.pop()
     callback(node)
-    children = node.children
-    if children
+    if children = node.children
       i = children.length - 1
       while i >= 0
         nodes.push children[i]
@@ -187,43 +169,21 @@ apportion = (v, w, ancestor)->
 
 # Node-link tree diagram using the Reingold-Tilford "tidy" algorithm
 
-tree_layout = (size_x, size_y)->
-  separation = defaultSeparation
-  dx = size_x
-  dy = size_y
-
-  tree = (root) ->
-    t = treeRoot root
+class TreeLayout
+  constructor: (tree_data)->
+    @root = hierarchy(tree_data)
+    @separation = defaultSeparation
+    t = treeRoot @root
     # Compute the layout using Buchheim et al.’s algorithm.
-    t.eachAfter firstWalk
+    t.eachAfter @firstWalk
     t.parent.m = -t.z
-    t.eachBefore secondWalk
-    # If a fixed node size is specified, scale x and y.
-    left = root
-    right = root
-    bottom = root
-    root.eachBefore (node) ->
-      if node.x < left.x
-        left = node
-      if node.x > right.x
-        right = node
-      if node.depth > bottom.depth
-        bottom = node
-    s = if left == right then 1 else separation(left, right) / 2
-    tx = s - (left.x)
-    kx = dx / (right.x + s + tx)
-    ky = dy / (bottom.depth or 1)
-    root.eachBefore (node) ->
-      node.x = (node.x + tx) * kx
-      node.y = node.depth * ky
-    root
+    t.eachBefore @secondWalk
 
-  # Computes a preliminary x-coordinate for v. Before that, FIRST WALK is
-  # applied recursively to the children of v, as well as the function
-  # APPORTION. After spacing out the children by calling EXECUTE SHIFTS, the
-  # node v is placed to the midpoint of its outermost children.
-
-  firstWalk = (v) ->
+# Computes a preliminary x-coordinate for v. Before that, FIRST WALK is
+# applied recursively to the children of v, as well as the function
+# APPORTION. After spacing out the children by calling EXECUTE SHIFTS, the
+# node v is placed to the midpoint of its outermost children.
+  firstWalk: (v)=>
     children = v.children
     siblings = v.parent.children
     w = if v.i then siblings[v.i - 1] else null
@@ -231,32 +191,37 @@ tree_layout = (size_x, size_y)->
       executeShifts v
       midpoint = (children[0].z + children[children.length - 1].z) / 2
       if w
-        v.z = w.z + separation(v._, w._)
+        v.z = w.z + @separation(v._, w._)
         v.m = v.z - midpoint
       else
         v.z = midpoint
     else if w
-      v.z = w.z + separation(v._, w._)
+      v.z = w.z + @separation(v._, w._)
     v.parent.A = apportion(v, w, v.parent.A or siblings[0])
 
-  # Computes all real x-coordinates by summing up the modifiers recursively.
-
-  secondWalk = (v) ->
+# Computes all real x-coordinates by summing up the modifiers recursively.
+  secondWalk: (v)=>
     v._.x = v.z + v.parent.m
     v.m += v.parent.m
 
-  # The core of the algorithm. Here, a new subtree is combined with the
-  # previous subtrees. Threads are used to traverse the inside and outside
-  # contours of the left and right subtree up to the highest common level. The
-  # vertices used for the traversals are vi+, vi-, vo-, and vo+, where the
-  # superscript o means outside and i means inside, the subscript - means left
-  # subtree and + means right subtree. For summing up the modifiers along the
-  # contour, we use respective variables si+, si-, so-, and so+. Whenever two
-  # nodes of the inside contours conflict, we compute the left one of the
-  # greatest uncommon ancestors using the function ANCESTOR and call MOVE
-  # SUBTREE to shift the subtree and prepare the shifts of smaller subtrees.
-  # Finally, we add a new thread (if necessary).
-
-  tree
-
+# If a fixed node size is specified, scale x and y.
+  size: (size_x, size_y)=>
+    left = @root
+    right = @root
+    bottom = @root
+    @root.eachBefore (node) ->
+      if node.x < left.x
+        left = node
+      if node.x > right.x
+        right = node
+      if node.depth > bottom.depth
+        bottom = node
+    s = if left == right then 1 else @separation(left, right) / 2
+    tx = s - (left.x)
+    kx = size_x / (right.x + s + tx)
+    ky = size_y / (bottom.depth or 1)
+    @root.eachBefore (node) ->
+      node.x = (node.x + tx) * kx
+      node.y = node.depth * ky
+    @root
 
