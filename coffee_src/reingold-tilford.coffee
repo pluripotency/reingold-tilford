@@ -7,14 +7,12 @@ computeHeight = (node)->
     node.height = height
 
 class Node
-  constructor: (data)->
-    @data = data
+  constructor: (@data)->
     @depth = @height = 0
     @parent = null
 
   eachAfter: (callback)=>
-    node = this
-    nodes = [ node ]
+    nodes = [ @ ]
     next = []
     while node = nodes.pop()
       next.push(node)
@@ -27,11 +25,10 @@ class Node
           ++i
     while node = next.pop()
       callback node
-    this
+    @
 
   eachBefore: (callback)=>
-    node = this
-    nodes = [ node ]
+    nodes = [ @ ]
     children = undefined
     i = undefined
     while node = nodes.pop()
@@ -42,7 +39,7 @@ class Node
         while i >= 0
           nodes.push children[i]
           --i
-    this
+    @
 
 hierarchy = (data, children) ->
   root = new Node(data)
@@ -215,49 +212,6 @@ apportion = (v, w, ancestor)->
       ancestor = v
   ancestor
 
-
-#```
-#function apportion(v, w, ancestor) {
-#  var separation = defaultSeparation
-#  if (w) {
-#    var vip = v,
-#        vop = v,
-#        vim = w,
-#        vom = vip.parent.children[0],
-#        sip = vip.m,
-#        sop = vop.m,
-#        sim = vim.m,
-#        som = vom.m,
-#        shift;
-#    while (vim = nextRight(vim), vip = nextLeft(vip), vim && vip) {
-#      vom = nextLeft(vom);
-#      vop = nextRight(vop);
-#      vop.a = v;
-#      shift = vim.z + sim - vip.z - sip + separation(vim._, vip._);
-#      if (shift > 0) {
-#        moveSubtree(nextAncestor(vim, v, ancestor), v, shift);
-#        sip += shift;
-#        sop += shift;
-#      }
-#      sim += vim.m;
-#      sip += vip.m;
-#      som += vom.m;
-#      sop += vop.m;
-#    }
-#    if (vim && !nextRight(vop)) {
-#      vop.t = vim;
-#      vop.m += sim - sop;
-#    }
-#    if (vip && !nextLeft(vom)) {
-#      vom.t = vip;
-#      vom.m += sip - som;
-#      ancestor = v;
-#    }
-#  }
-#  return ancestor;
-#}
-#```
-
 # Node-link tree diagram using the Reingold-Tilford "tidy" algorithm
 
 tree_layout = ->
@@ -373,175 +327,3 @@ tree_layout = ->
   tree
 
 
-frame = (children, width=100, height=60, style="background-color: cornflowerblue")->
-  m 'svg',
-    x: 0
-    y: 0
-    width: width
-    height: height
-    style: style
-  , children
-
-rect = (x, y, width=50, height=20)->
-  x_top = x-width/2
-  y_top = y-height/2
-  m 'rect',
-    rx: 5
-    x: x_top
-    y: y_top
-    width: width
-    height: height
-    stroke: 'white'
-    fill: 'darkslategray'
-    'stroke-width': 2
-
-text_svg = (x, y, text, style="font-size: 1em;", anchor='middle')->
-  m 'text',
-      x: x
-      y: y
-      'text-anchor': anchor
-      'dominant-baseline': 'central'
-      fill: 'white'
-      style: style
-    , text
-
-textbox = (x, y, text, width=50, height=20)->
-  [
-    rect x, y, width, height
-    text_svg x, y, text
-  ]
-
-diag_v = (start_x, start_y, end_x, end_y, target_height=20)->
-  if start_y < end_y
-    start_y = start_y+target_height/2
-    end_y = end_y-target_height/2
-  else
-    start_y = start_y-target_height/2
-    end_y = end_y+target_height/2
-  move_to_start = "M#{start_x},#{start_y}"
-  first = "C#{start_x},#{(end_y-start_y)/2+start_y}"
-  second = "#{end_x},#{(end_y-start_y)/2+start_y}"
-  third = "#{end_x},#{end_y}"
-  m 'path',
-    d: "#{move_to_start} #{first} #{second} #{third}"
-    stroke: 'yellowgreen'
-    fill: 'transparent'
-    'stroke-width': 1.5
-
-tree_data =
-  children: [
-    children: [
-      children: []
-    ,
-      children: [
-        children: []
-      ,
-        children: []
-      ,
-        children: []
-      ]
-    ,
-      children: [
-        children: []
-      ,
-        children: []
-      ,
-        children: []
-      ,
-        children: []
-      ,
-        children: []
-      ]
-    ,
-      children: []
-    ]
-  ,
-    children: [
-      children: [
-        children: []
-      ,
-        children: []
-      ]
-
-    ]
-  ,
-    children: [
-      children: []
-    ,
-      children: []
-    ]
-  ]
-root = hierarchy(tree_data)
-
-getCurrentCanvas = ->
-  mar = [
-    0 # top
-    0 # left
-    0 # right
-    4 # bottom
-  ]
-  #mar = [
-  #  10 # top
-  #  5 # left
-  #  5 # right
-  #  10 # bottom
-  #]
-  win_w = window.innerWidth
-  win_h = window.innerHeight
-  w = win_w - mar[1] - mar[2]
-  h = win_h - mar[0] - mar[3]
-  {
-    margin: mar
-    win_w: win_w
-    win_h: win_h
-    w: w
-    h: h
-    offset_y: 20
-  }
-
-resizeTimer = false
-resizeHandler = ()->
-  if resizeTimer != false
-    clearTimeout resizeTimer
-  resizeTimer = setTimeout ->
-    m.startComputation()
-    vm.create()
-    m.endComputation()
-  , 500
-
-if window.navigator?.userAgent?
-  userAgent = window.navigator.userAgent
-  if userAgent.indexOf('iPhone')>=0 or userAgent.indexOf('iPad')>=0 or userAgent.indexOf('android')>=0
-    window.addEventListener 'orientationchange', resizeHandler
-  else
-    window.addEventListener 'resize', resizeHandler
-
-
-create_layer_node = (node, node_list, name, offset_y)->
-  node_list.push textbox(node.x, node.y+offset_y, name)
-  len = node_list.length
-  if node.children?
-    node.children.map (child, i)->
-      node_list.push diag_v(node.x, node.y+offset_y, child.x, child.y+offset_y)
-      create_layer_node child, node_list, len+i, offset_y
-
-vm =
-  create: ()->
-    canvas = getCurrentCanvas()
-    w = canvas.w
-    h = canvas.h
-    off_y = canvas.offset_y
-    created = tree_layout().size([w, h-off_y*2])(root)
-    node_list = [
-      text_svg 10, 20, 'Reingold Tilford Tree Layout', 'font-size: 1.2em;', null
-    ]
-    create_layer_node(created, node_list, 1, off_y)
-    frame node_list, w, h
-
-TreeLayout =
-  controller: (args)->
-    vm
-  view: (ctrl, args)->
-    m 'div', ctrl.create()
-
-m.mount document.getElementById('contents'), m.component TreeLayout
