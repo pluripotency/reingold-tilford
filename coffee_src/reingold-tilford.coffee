@@ -1,14 +1,6 @@
-computeHeight = (node)->
-  height = 0
-  node.height = height
-  while node.parent? and node.height < height
-    node = node.parent
-    height++
-    node.height = height
-
 class Node
   constructor: (@data)->
-    @depth = @height = 0
+    @depth = 0
     @parent = null
 
   eachAfter: (callback)=>
@@ -29,12 +21,9 @@ class Node
 
   eachBefore: (callback)=>
     nodes = [ @ ]
-    children = undefined
-    i = undefined
     while node = nodes.pop()
       callback(node)
-      children = node.children
-      if children
+      if children = node.children
         i = children.length - 1
         while i >= 0
           nodes.push children[i]
@@ -43,33 +32,22 @@ class Node
 
 hierarchy = (data, children) ->
   root = new Node(data)
-  valued = +data.value and (root.value = data.value)
-  node = undefined
   nodes = [ root ]
-  child = undefined
-  childs = undefined
-  i = undefined
-  n = undefined
   while node = nodes.pop()
-    if valued
-      node.value = +node.data.value
-    if (childs = node.data.children) and (n = childs.length)
+    if (children = node.data.children) and (n = children.length)
       node.children = new Array(n)
       i = n - 1
       while i >= 0
-        nodes.push child = node.children[i] = new Node(childs[i])
+        nodes.push child = node.children[i] = new Node(children[i])
         child.parent = node
         child.depth = node.depth + 1
         --i
-  root.eachBefore computeHeight
+  root
 
 
+defaultSeparation = (a, b) -> if a.parent == b.parent then 1 else 1.5
 
-defaultSeparation = (a, b) -> if a.parent == b.parent then 1 else 2
-
-# function radialSeparation(a, b) {
-#   return (a.parent === b.parent ? 1 : 2) / a.depth;
-# }
+#radialSeparation = (a, b)-> if a.parent == b.parent then 1/a.depth else 2/a.depth
 # This function is used to traverse the left contour of a subtree (or
 # subforest). It returns the successor of v on this contour. This successor is
 # either given by the leftmost child of v or by the thread of v. The function
@@ -118,7 +96,7 @@ TreeNode = (node, i) ->
   @parent = null
   @children = null
   @A = null # default ancestor
-  @a = this # ancestor
+  @a = @    # ancestor
   @z = 0    # prelim
   @m = 0    # mod
   @c = 0    # change
@@ -128,12 +106,7 @@ TreeNode = (node, i) ->
 
 treeRoot = (root) ->
   tree = new TreeNode(root, 0)
-  node = undefined
   nodes = [ tree ]
-  child = undefined
-  children = undefined
-  i = undefined
-  n = undefined
   while node = nodes.pop()
     if children = node._.children
       node.children = new Array(n = children.length)
@@ -214,39 +187,35 @@ apportion = (v, w, ancestor)->
 
 # Node-link tree diagram using the Reingold-Tilford "tidy" algorithm
 
-tree_layout = ->
+tree_layout = (size_x, size_y)->
   separation = defaultSeparation
-  dx = 1
-  dy = 1
-  nodeSize = null
+  dx = size_x
+  dy = size_y
 
   tree = (root) ->
-    t = treeRoot(root)
+    t = treeRoot root
     # Compute the layout using Buchheim et al.’s algorithm.
-    t.eachAfter(firstWalk)
+    t.eachAfter firstWalk
     t.parent.m = -t.z
     t.eachBefore secondWalk
     # If a fixed node size is specified, scale x and y.
-    if nodeSize
-      root.eachBefore sizeNode
-    else
-      left = root
-      right = root
-      bottom = root
-      root.eachBefore (node) ->
-        if node.x < left.x
-          left = node
-        if node.x > right.x
-          right = node
-        if node.depth > bottom.depth
-          bottom = node
-      s = if left == right then 1 else separation(left, right) / 2
-      tx = s - (left.x)
-      kx = dx / (right.x + s + tx)
-      ky = dy / (bottom.depth or 1)
-      root.eachBefore (node) ->
-        node.x = (node.x + tx) * kx
-        node.y = node.depth * ky
+    left = root
+    right = root
+    bottom = root
+    root.eachBefore (node) ->
+      if node.x < left.x
+        left = node
+      if node.x > right.x
+        right = node
+      if node.depth > bottom.depth
+        bottom = node
+    s = if left == right then 1 else separation(left, right) / 2
+    tx = s - (left.x)
+    kx = dx / (right.x + s + tx)
+    ky = dy / (bottom.depth or 1)
+    root.eachBefore (node) ->
+      node.x = (node.x + tx) * kx
+      node.y = node.depth * ky
     root
 
   # Computes a preliminary x-coordinate for v. Before that, FIRST WALK is
@@ -287,42 +256,6 @@ tree_layout = ->
   # greatest uncommon ancestors using the function ANCESTOR and call MOVE
   # SUBTREE to shift the subtree and prepare the shifts of smaller subtrees.
   # Finally, we add a new thread (if necessary).
-
-
-  sizeNode = (node) ->
-    node.x *= dx
-    node.y = node.depth * dy
-
-  tree.separation = (x) ->
-    if arguments.length
-      separation = x
-      tree
-    else
-      separation
-
-  tree.size = (x) ->
-    if arguments.length
-      nodeSize = false
-      dx = +x[0]
-      dy = +x[1]
-      tree
-    else if nodeSize then null else [
-        dx
-        dy
-      ]
-
-  tree.nodeSize = (x) ->
-    if arguments.length
-      nodeSize = true
-      dx = +x[0]
-      dy = +x[1]
-      tree
-    else if nodeSize
-      [
-        dx
-        dy
-      ]
-    else null
 
   tree
 

@@ -1,24 +1,9 @@
 root = hierarchy(tree_data)
 
 getCurrentCanvas = ->
-  mar = [
-    0 # top
-    0 # left
-    0 # right
-    0 # bottom
-  ]
-  win_w = window.innerWidth
-  win_h = window.innerHeight
-  w = win_w - mar[1] - mar[2]
-  h = win_h - mar[0] - mar[3]
-  {
-    margin: mar
-    win_w: win_w
-    win_h: win_h
-    w: w
-    h: h
-    offset_y: 20
-  }
+  w: window.innerWidth
+  h: window.innerHeight
+  offset_y: 20
 
 resizeTimer = false
 resizeHandler = ()->
@@ -55,7 +40,7 @@ vm =
     w = canvas.w
     h = canvas.h
     off_y = canvas.offset_y
-    created = tree_layout().size([w, h-off_y*2])(root)
+    created = tree_layout(w, h-off_y*2)(root)
     node_list = []
     diag_list = []
     create_layer_node(created, node_list, diag_list, off_y)
