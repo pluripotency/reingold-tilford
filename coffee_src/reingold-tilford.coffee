@@ -205,7 +205,7 @@ class TreeLayout
     v.m += v.parent.m
 
 # If a fixed node size is specified, scale x and y.
-  size: (size_x, size_y)=>
+  size: (size_x, size_y, offset_y)=>
     left = @root
     right = @root
     bottom = @root
@@ -219,9 +219,9 @@ class TreeLayout
     s = if left == right then 1 else @separation(left, right) / 2
     tx = s - (left.x)
     kx = size_x / (right.x + s + tx)
-    ky = size_y / (bottom.depth or 1)
+    ky = (size_y-offset_y*2) / (bottom.depth or 1)
     @root.eachBefore (node) ->
       node.x = (node.x + tx) * kx
-      node.y = node.depth * ky
+      node.y = node.depth * ky + offset_y
     @root
 

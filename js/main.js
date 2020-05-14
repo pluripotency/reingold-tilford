@@ -5,7 +5,7 @@ getCurrentCanvas = function() {
   return {
     w: window.innerWidth,
     h: window.innerHeight,
-    offset_y: 20
+    offset_y: 40
   };
 };
 
@@ -31,19 +31,19 @@ if (((ref = window.navigator) != null ? ref.userAgent : void 0) != null) {
   }
 }
 
-create_layer_node = function(node, node_list, diag_list, offset_y) {
+create_layer_node = function(node, node_list, diag_list) {
   var len, tb;
   len = node_list.length;
   if (node.data.name != null) {
-    tb = textbox(node.x, node.y + offset_y, node.data.name, 'red');
+    tb = textbox(node, node.data.name, 'red');
   } else {
-    tb = textbox(node.x, node.y + offset_y, len);
+    tb = textbox(node, len);
   }
   node_list.push(tb);
   if (node.children != null) {
     return node.children.map(function(child, i) {
-      diag_list.push(diag_v(node.x, node.y + offset_y, child.x, child.y + offset_y));
-      return create_layer_node(child, node_list, diag_list, offset_y);
+      diag_list.push(diag_v(node, child));
+      return create_layer_node(child, node_list, diag_list);
     });
   }
 };
@@ -56,11 +56,11 @@ vm = {
     h = canvas.h;
     off_y = canvas.offset_y;
     calculated_tree = new TreeLayout(tree_data);
-    fit_size = calculated_tree.size(w, h - off_y * 2);
+    fit_size = calculated_tree.size(w, h, off_y);
     node_list = [];
     diag_list = [];
-    create_layer_node(fit_size, node_list, diag_list, off_y);
-    compute_list = [text_svg(10, 20, 'Reingold Tilford Tree Layout', 'font-size: 1.2em;', null), ...node_list, ...diag_list];
+    create_layer_node(fit_size, node_list, diag_list);
+    compute_list = [text_svg(20, 30, 'Reingold Tilford Tree Layout', 'font-size: 3em;', null), ...node_list, ...diag_list];
     return frame(compute_list, w, h);
   }
 };

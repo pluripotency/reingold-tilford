@@ -13,6 +13,8 @@ tree_data =
         children: []
       ]
     ,
+      children: []
+    ,
       name: 'bar'
       children: [
         children: []
@@ -26,15 +28,19 @@ tree_data =
       ,
         children: []
       ]
-    ,
-      children: []
     ]
   ,
     children: [
       children: [
         children: []
       ,
-        children: []
+        children: [
+          children: []
+        ,
+          children: []
+        ,
+          children: []
+        ]
       ]
 
     ]

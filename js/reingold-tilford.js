@@ -279,7 +279,7 @@ TreeLayout = class TreeLayout {
     return v.m += v.parent.m;
   }
 
-  size(size_x, size_y) {
+  size(size_x, size_y, offset_y) {
     var bottom, kx, ky, left, right, s, tx;
     left = this.root;
     right = this.root;
@@ -298,10 +298,10 @@ TreeLayout = class TreeLayout {
     s = left === right ? 1 : this.separation(left, right) / 2;
     tx = s - left.x;
     kx = size_x / (right.x + s + tx);
-    ky = size_y / (bottom.depth || 1);
+    ky = (size_y - offset_y * 2) / (bottom.depth || 1);
     this.root.eachBefore(function(node) {
       node.x = (node.x + tx) * kx;
-      return node.y = node.depth * ky;
+      return node.y = node.depth * ky + offset_y;
     });
     return this.root;
   }

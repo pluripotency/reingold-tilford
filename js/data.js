@@ -24,6 +24,9 @@ tree_data = {
           ]
         },
         {
+          children: []
+        },
+        {
           name: 'bar',
           children: [
             {
@@ -43,9 +46,6 @@ tree_data = {
               children: []
             }
           ]
-        },
-        {
-          children: []
         }
       ]
     },
@@ -57,7 +57,17 @@ tree_data = {
               children: []
             },
             {
-              children: []
+              children: [
+                {
+                  children: []
+                },
+                {
+                  children: []
+                },
+                {
+                  children: []
+                }
+              ]
             }
           ]
         }
