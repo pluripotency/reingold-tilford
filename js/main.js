@@ -16,9 +16,8 @@ resizeHandler = function() {
     clearTimeout(resizeTimer);
   }
   return resizeTimer = setTimeout(function() {
-    m.startComputation();
     vm.create();
-    return m.endComputation();
+    return m.redraw();
   }, 500);
 };
 
@@ -32,14 +31,9 @@ if (((ref = window.navigator) != null ? ref.userAgent : void 0) != null) {
 }
 
 create_layer_node = function(node, node_list, diag_list) {
-  var len, tb;
+  var len;
   len = node_list.length;
-  if (node.data.name != null) {
-    tb = textbox(node, node.data.name, 'red');
-  } else {
-    tb = textbox(node, len);
-  }
-  node_list.push(tb);
+  node_list.push(textbox(node, len));
   if (node.children != null) {
     return node.children.map(function(child, i) {
       diag_list.push(diag_v(node, child));
@@ -71,4 +65,4 @@ view = {
   }
 };
 
-m.mount(document.getElementById('contents'), m.component(view));
+m.mount(document.getElementById('contents'), view);

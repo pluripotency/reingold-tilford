@@ -9,9 +9,8 @@ resizeHandler = ()->
   if resizeTimer != false
     clearTimeout resizeTimer
   resizeTimer = setTimeout ->
-    m.startComputation()
     vm.create()
-    m.endComputation()
+    m.redraw()
   , 500
 
 if window.navigator?.userAgent?
@@ -23,11 +22,7 @@ if window.navigator?.userAgent?
 
 create_layer_node = (node, node_list, diag_list)->
   len = node_list.length
-  if node.data.name?
-    tb = textbox(node, node.data.name, 'red')
-  else
-    tb = textbox(node, len)
-  node_list.push tb
+  node_list.push textbox(node, len)
   if node.children?
     node.children.map (child, i)->
       diag_list.push diag_v(node, child)
@@ -54,4 +49,4 @@ vm =
 view =
   view: (ctrl, args)-> vm.create()
 
-m.mount document.getElementById('contents'), m.component view
+m.mount document.getElementById('contents'), view
